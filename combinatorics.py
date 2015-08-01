@@ -32,15 +32,11 @@ class Combinatorics:
             for number in num_list:
                 yield number
         else:
-            part1_old = None
             for part1, part2 in self.allPartition(num_list):
-                if part2 == part1_old: break
-                part1_old = part1
                 for op in '*/+-':
                     for expr1 in self.findAllPossibleExprTree(part1):
                         for expr2 in self.findAllPossibleExprTree(part2):
                             yield ExprTree(op, expr1, expr2)
-                            yield ExprTree(op, expr2, expr1)
 
 
     def findNonRedundantExprTree(self, num_list):
@@ -60,6 +56,7 @@ class Combinatorics:
                             if (op == '/' or op == '-') and \
                                part1 != part2:
                                 yield ExprTree(op, expr2, expr1)
+
 
     def writeAllExpr(self, exprs, max_write_size):
         line_byte = None
