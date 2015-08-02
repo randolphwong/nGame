@@ -3,5 +3,5 @@
 
 setup.py
 others/*
-build/*
+python/build/*
 
