@@ -256,6 +256,8 @@ int main() {
 	cout << "Number of expressions enumerated: " << exprs.size() << endl;
     cout << "Number of solutions found: " << soln_count << endl;
 
+
+	cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	cin.clear();
 	cin.get();
 	return 0;
