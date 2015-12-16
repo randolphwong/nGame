@@ -5,3 +5,4 @@ setup.py
 others/*
 python/build/*
 
+.ycm_extra_conf.*
