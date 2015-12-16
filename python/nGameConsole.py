@@ -1,5 +1,6 @@
 from combinatorics import *
 import re
+import cProfile
 
 def test(n, ans):
     floated = [float(i) for i in n]
@@ -33,8 +34,9 @@ def getNumbersFromUser():
 def main():
     while True:
         try:
-            n, ans = getNumbersFromUser()
-            test(n, ans)
+            # n, ans = getNumbersFromUser()
+            test(*getNumbersFromUser())
+            # cProfile.run("test([1, 2, 3, 4, 5], 24)")
             print
             
         except MemoryError:
@@ -42,5 +44,6 @@ def main():
         print
         
 main()
+# cProfile.run("test([1,2,3,4,5], 24)")
 #test(['1','2','3','5'], 24)
 
