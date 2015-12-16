@@ -6,6 +6,7 @@
 #include <functional>
 #include <chrono>
 #include <sstream>
+#include "ExprTree.h"
 
 using std::cin;
 using std::cout;
@@ -21,97 +22,14 @@ typedef vector<vector<double> >::const_iterator vvd_iter;
 
 std::string operators = "*+/-";
 
-template<typename operand_type_A, typename operand_type_B>
-class ExprTree
-{
-public:
-    ExprTree(){};
-    ExprTree(const char op_, const operand_type_A& operand1_, const operand_type_B& operand2_) {
-        op = op_;
-        operand1 = operand1_;
-        operand2 = operand2_;
-    };
-    double eval() const;
-    std::string str() const;
-
-private:
-    char op;
-    operand_type_A operand1;
-    operand_type_B operand2;
-};
-
-template<typename operand_type_A, typename operand_type_B>
-ExprTree<operand_type_A, operand_type_B> makeExpr(const char op, const operand_type_A& operand1, const operand_type_B& operand2)
-{
-    return ExprTree<operand_type_A, operand_type_B>(op, operand1, operand2);
-}
-
-template<typename T>
-std::string ToString(const T& x)
-{
-    return x.str();
-}
-
-template<>
-std::string ToString<double>(const double& x)
-{
-    //return std::to_string(x);
-    /*==== test ====*/
-
-    std::ostringstream ss;
-
-    ss << x;
-
-    return ss.str();
-
-    /*==== test ====*/
-}
-
-template<typename operand_type_A, typename operand_type_B>
-std::string ExprTree<operand_type_A, operand_type_B>::str() const {
-    std::ostringstream os;
-    std::string op1, op2;
-    op1 = ToString(operand1);
-    op2 = ToString(operand2);
-    os << "(" << op1 << " " << op << " " << op2 << ")";
-    return os.str();
-}
-
-template<typename T>
-double evalOperand(const T& x)
-{
-    return x.eval();
-}
-
-template<>
-double evalOperand<double>(const double& x)
-{
-    return x;
-}
-
-template<typename operand_type_A, typename operand_type_B>
-double ExprTree<operand_type_A, operand_type_B>::eval() const {
-    double op1, op2;
-    op1 = evalOperand(operand1);
-    op2 = evalOperand(operand2);
-    switch (op) {
-    case '*':
-        return op1 * op2;
-    case '/':
-        return op1 / op2;
-    case '+':
-        return op1 + op2;
-    case '-':
-        return op1 - op2;
-    }
-}
-
-vector<double>& getNumberSequence(istream& input, vector<double>& num_vector) {
+vector<double>& getNumberSequence(istream& inStream, vector<double>& num_vector) {
+    std::string input;
+    std::getline(inStream, input);
+    std::istringstream parser(input);
     double number;
-    while (input >> number) {
+    while (parser >> number) {
         num_vector.push_back(number);
     }
-    input.clear();
     return num_vector;
 }
 
@@ -136,13 +54,13 @@ vector<vector<double> >& getCombination(const vector<double>& num_vector, int ch
 }
 
 void getAllCombination(const vector<double>& num_seq, vector<vector<double> >& combinations) {
-    for (int i = 1; i != num_seq.size(); ++i) {
+    for (std::size_t i = 1; i != num_seq.size(); ++i) {
         getCombination(num_seq, i, combinations);
     }
 }
 
 void setPartition(const vector<double>& num_seq, vector<vector<double> >& part1, vector<vector<double> >& part2) {
-    for (int i = 1; i != num_seq.size(); ++i) {
+    for (std::size_t i = 1; i != num_seq.size(); ++i) {
         getCombination(num_seq, i, part1);
     }
 
@@ -153,22 +71,9 @@ void setPartition(const vector<double>& num_seq, vector<vector<double> >& part1,
     }
 }
 
-double expr(const char& op, const double& operand1, const double& operand2) {
-    switch (op) {
-        case '*':
-            return operand1 * operand2;
-        case '+':
-            return operand1 + operand2;
-        case '/':
-            return operand1 / operand2;
-        case '-':
-            return operand1 - operand2;
-    }
-}
-
-vector<double>& findNonRedundantExprTree(const vector<double>& num_seq, vector<double>& trees) {
+vector<ExprTree>& findNonRedundantExprTree(const vector<double>& num_seq, vector<ExprTree>& trees) {
     if (num_seq.size() == 1) {
-        trees = num_seq;
+        trees.push_back(ExprTree(num_seq[0]));
         return trees;
     }
     vector<vector<double> > part1, part2;
@@ -179,13 +84,13 @@ vector<double>& findNonRedundantExprTree(const vector<double>& num_seq, vector<d
         for (vector<vector<double> >::size_type i = 0; i != part1.size(); ++i) {
             if (part2[i] == part1_old) break;
             part1_old = part1[i];
-            vector<double> all_expr1, all_expr2;
+            vector<ExprTree> all_expr1, all_expr2;
             findNonRedundantExprTree(part1[i], all_expr1);
             findNonRedundantExprTree(part2[i], all_expr2);
-            for (vector<double>::const_iterator expr1 = all_expr1.begin(); expr1 != all_expr1.end(); ++expr1) {
-                for (vector<double>::const_iterator expr2 = all_expr2.begin(); expr2 != all_expr2.end(); ++expr2) {
-                    trees.push_back(expr(operators[op], *expr1, *expr2));
-                    if (op > 1) trees.push_back(expr(operators[op], *expr2, *expr1));
+            for (vector<ExprTree>::const_iterator expr1 = all_expr1.begin(); expr1 != all_expr1.end(); ++expr1) {
+                for (vector<ExprTree>::const_iterator expr2 = all_expr2.begin(); expr2 != all_expr2.end(); ++expr2) {
+                    trees.push_back(ExprTree(operators[op], *expr1, *expr2));
+                    if (op > 1) trees.push_back(ExprTree(operators[op], *expr2, *expr1));
                 }
             }
         }
@@ -193,9 +98,9 @@ vector<double>& findNonRedundantExprTree(const vector<double>& num_seq, vector<d
     return trees;
 }
 
-vector<double>& findAllExprTree(const vector<double>& num_seq, vector<double>& trees) {
+vector<ExprTree>& findAllExprTree(const vector<double>& num_seq, vector<ExprTree>& trees) {
     if (num_seq.size() == 1) {
-        trees = num_seq;
+        trees.push_back(ExprTree(num_seq[0]));
         return trees;
     }
     vector<vector<double> > part1, part2;
@@ -206,13 +111,13 @@ vector<double>& findAllExprTree(const vector<double>& num_seq, vector<double>& t
         for (vector<vector<double> >::size_type i = 0; i != part1.size(); ++i) {
             if (part2[i] == part1_old) break;
             part1_old = part1[i];
-            vector<double> all_expr1, all_expr2;
+            vector<ExprTree> all_expr1, all_expr2;
             findAllExprTree(part1[i], all_expr1);
             findAllExprTree(part2[i], all_expr2);
-            for (vector<double>::const_iterator expr1 = all_expr1.begin(); expr1 != all_expr1.end(); ++expr1) {
-                for (vector<double>::const_iterator expr2 = all_expr2.begin(); expr2 != all_expr2.end(); ++expr2) {
-                    trees.push_back(expr(operators[op], *expr1, *expr2));
-                    trees.push_back(expr(operators[op], *expr2, *expr1));
+            for (vector<ExprTree>::const_iterator expr1 = all_expr1.begin(); expr1 != all_expr1.end(); ++expr1) {
+                for (vector<ExprTree>::const_iterator expr2 = all_expr2.begin(); expr2 != all_expr2.end(); ++expr2) {
+                    trees.push_back(ExprTree(operators[op], *expr1, *expr2));
+                    trees.push_back(ExprTree(operators[op], *expr2, *expr1));
                 }
             }
         }
@@ -236,20 +141,25 @@ int main() {
     // performance check start
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
-    vector<double> exprs;
+    //vector<double> exprs;
+    //exprs = findNonRedundantExprTree(num_seq, exprs);
+    vector<ExprTree> exprs;
     exprs = findNonRedundantExprTree(num_seq, exprs);
-    //exprs = findAllExprTree(num_seq, exprs);
 
     // performance check end
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
 
-    // count total solutions found
+    // print solutions found
    
+    std::cout << "Showing first 10 solutions (if any)." << std::endl;
     int soln_count = 0;
-    for (vector<double>::const_iterator expr = exprs.begin(); expr != exprs.end(); ++expr) {
-        if (std::abs(*expr - target) < 0.01) 
+    for (vector<ExprTree>::const_iterator expr = exprs.begin(); expr != exprs.end(); ++expr) {
+        if (std::abs(expr->eval() - target) < 0.01) {
+            if (soln_count <= 10)
+                std::cout << expr->str() << std::endl;
             ++soln_count;
+        }
     }
     
     cout << "Duration for operations: " << (duration / 1000000.) << "s" << endl;
